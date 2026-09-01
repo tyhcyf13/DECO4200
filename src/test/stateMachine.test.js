@@ -70,17 +70,18 @@ describe('normal morning: the whole day, all core states reachable via DONE only
     expect(ctx.block).toBe('afternoon')
 
     ctx = send(ctx, 'SYSTEM_TICK') // -> due, afternoon
-    expect(ctx.items).toEqual(['atorvastatin'])
+    expect(ctx.items).toEqual(['atorvastatin', 'amlodipine'])
     ctx = send(ctx, 'DONE') // -> dose
-    ctx = send(ctx, 'DONE') // atorvastatin -> confirmed
+    ctx = send(ctx, 'DONE') // atorvastatin
+    ctx = send(ctx, 'DONE') // amlodipine -> confirmed
     ctx = send(ctx, 'DONE') // -> next
     ctx = send(ctx, 'DONE') // -> quiet, evening
     expect(ctx.block).toBe('evening')
 
     ctx = send(ctx, 'SYSTEM_TICK') // -> due, evening
-    expect(ctx.items).toEqual(['melatonin'])
+    expect(ctx.items).toEqual(['omeprazole'])
     ctx = send(ctx, 'DONE') // -> dose
-    ctx = send(ctx, 'DONE') // melatonin -> confirmed
+    ctx = send(ctx, 'DONE') // omeprazole -> confirmed
     ctx = send(ctx, 'DONE') // -> next
 
     // "What's next" should show all three blocks, with the ones already
@@ -213,7 +214,7 @@ describe('medication change scenario', () => {
     // dosage change: Ramipril's id changes to the updated-dosage variant
     expect(ctx.items).toContain('ramipril-changed')
     expect(ctx.items).not.toContain('ramipril')
-    // discontinued: Melatonin no longer appears anywhere in the day
+    // discontinued: Omeprazole no longer appears anywhere in the day
     expect(itemsForBlock('evening', SCENARIOS.CHANGE)).toHaveLength(0)
   })
 

@@ -84,7 +84,7 @@ A prescription change (a dosage change, a discontinued medication) is
 scenario data, not a special case in the machine's logic: the medication-change
 scenario's medication list is computed by `itemsForBlock(block, scenario)`
 (in `src/meds.js`), so its `due` screen genuinely lists Ramipril at the new
-5 mg and no longer lists Melatonin at all — the interruption isn't just
+5 mg and no longer lists Omeprazole at all — the interruption isn't just
 cosmetic. Both changes are shown together on one `change` screen and
 acknowledged with a single DONE, since the user should never have to work
 through a change type at a time.
@@ -140,13 +140,15 @@ too, for testing without a mouse:
 The background panel's scenario picker resets the whole prototype into one of
 four demo paths — deliberately few, so each one earns its place:
 
-- **Normal morning** — the whole day. Press DONE through morning (Metformin,
-  Ramipril), afternoon (Atorvastatin), and evening (Melatonin, a clearly
-  labelled sample medication demonstrating the routine spans a full day, not
-  just a morning block). Also the best scenario to explore `LATER` (defer a
-  dose, then either wait or use "Skip wait" — defer twice to see the
-  softened "still waiting" prompt) and `?` (check "did I take it?" from any
-  resting screen).
+- **Normal morning** — the whole day, five prescriptions across three
+  blocks: morning (Metformin, Ramipril), afternoon (Atorvastatin,
+  Amlodipine), and evening (Omeprazole, a clearly labelled sample
+  medication — these five are prototype data, not medical advice). The
+  device still only ever shows what's due right now — "2 medications to
+  take now," never all five at once. Also the best scenario to explore
+  `LATER` (defer a dose, then either wait or use "Skip wait" — defer twice
+  to see the softened "still waiting" prompt) and `?` (check "did I take
+  it?" from any resting screen).
 - **Digital prescription setup** — press DONE to receive an already-verified
   prescription, load the medications, and ready the routine. Demonstrates
   the pharmacist → digital transmission → device pathway.
@@ -157,7 +159,7 @@ four demo paths — deliberately few, so each one earns its place:
   anything on its own.
 - **Medication change** — a change interruption appears before the routine,
   showing a dosage change (Ramipril 10 mg → 5 mg) and a discontinued
-  medication (Melatonin) together on one screen, acknowledged with a single
+  medication (Omeprazole) together on one screen, acknowledged with a single
   DONE ("I understand"). The routine that follows genuinely reflects both
   changes — the user never calculates or reorganises anything themselves.
 

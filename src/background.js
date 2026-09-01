@@ -10,14 +10,15 @@
 // scan, a chime, medication loaded or taken).
 
 import { STATES, SCENARIOS } from './stateMachine.js'
-import { changesForScenario } from './meds.js'
+import { changesForScenario, itemsForBlock } from './meds.js'
 import { reminderTimeFor, capitalize } from './timeUtils.js'
 
 const SUPPLY = {
   metformin: { label: 'Metformin', remaining: 58 },
   ramipril: { label: 'Ramipril', remaining: 29 },
   atorvastatin: { label: 'Atorvastatin', remaining: 44 },
-  melatonin: { label: 'Melatonin', remaining: 27 },
+  amlodipine: { label: 'Amlodipine', remaining: 33 },
+  omeprazole: { label: 'Omeprazole', remaining: 27 },
 }
 
 function d(text) {
@@ -35,10 +36,16 @@ export function initialLogLines(scenario) {
     return [] // nothing has happened yet — the user hasn't scanned anything
   }
 
+  // Counts describe the original, pre-change regimen — the baseline the
+  // pharmacy set up — even for the medication-change scenario, whose
+  // discontinued item hasn't been revealed to the user yet at this point.
+  const medCount = (block) => itemsForBlock(block, SCENARIOS.NORMAL).length
   const lines = [
-    d('Pharmacy record synced.'),
-    d('Three prescriptions collapsed into one morning block.'),
-    d('Dose sequence chosen — Metformin first (with food).'),
+    d('Five prescriptions received and verified.'),
+    d('Prescriptions consolidated into three daily medication blocks.'),
+    d(`Morning sequence created — ${medCount('morning')} medications.`),
+    d(`Afternoon sequence created — ${medCount('afternoon')} medications.`),
+    d(`Evening sequence created — ${medCount('evening')} medication${medCount('evening') === 1 ? '' : 's'}.`),
   ]
 
   if (scenario === SCENARIOS.CHANGE) {

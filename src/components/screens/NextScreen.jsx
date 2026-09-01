@@ -8,7 +8,9 @@ export default function NextScreen({ columns }) {
         {columns.map((col) => (
           <div key={col.key} className={`next-col${col.isActive ? ' next-col--active' : ''}`}>
             <p className="next-col__label">{col.label}</p>
-            <p className="next-col__time">{col.time}</p>
+            <p className="next-col__count">
+              {col.count} {col.count === 1 ? 'medication' : 'medications'}
+            </p>
             <div className="next-col__bar">
               <div className="next-col__fill" style={{ height: `${col.fillPct}%` }} />
             </div>

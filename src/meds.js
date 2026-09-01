@@ -46,28 +46,47 @@ const atorvastatin = {
   name: 'Atorvastatin',
   strength: '20 mg',
   form: 'tablet',
-  instruction: 'Take with or without food',
+  instruction: 'Take at the same time each day',
   purpose: 'Lowers cholesterol to help protect your heart.',
   when: 'Afternoon',
   how: 'One tablet',
   prescriptionRef: 'Rx 39871',
 }
 
-// Sample evening medication — demonstrates the routine spans a full day,
-// not just a morning block.
-const melatonin = {
-  id: 'melatonin',
-  name: 'Melatonin',
-  strength: '3 mg',
+const amlodipine = {
+  id: 'amlodipine',
+  name: 'Amlodipine',
+  strength: '5 mg',
   form: 'tablet',
-  instruction: 'Take 30 minutes before bed',
-  purpose: 'A sample evening medication, used here to help you settle to sleep.',
+  instruction: 'Take once daily',
+  purpose: 'Relaxes blood vessels to lower blood pressure.',
+  when: 'Afternoon',
+  how: 'One tablet',
+  prescriptionRef: 'Rx 84120',
+}
+
+// Sample evening medication — demonstrates the routine spans a full day,
+// not just a morning block. Prototype/sample only, not medical advice.
+const omeprazole = {
+  id: 'omeprazole',
+  name: 'Omeprazole',
+  strength: '20 mg',
+  form: 'tablet',
+  instruction: 'Take before dinner',
+  purpose: 'A sample evening medication, used here to reduce stomach acid.',
   when: 'Evening',
   how: 'One tablet',
   prescriptionRef: 'Rx 72340',
 }
 
-const MEDS = { metformin, ramipril, 'ramipril-changed': ramprilChanged, atorvastatin, melatonin }
+const MEDS = {
+  metformin,
+  ramipril,
+  'ramipril-changed': ramprilChanged,
+  atorvastatin,
+  amlodipine,
+  omeprazole,
+}
 
 export function medById(id) {
   return MEDS[id] ?? null
@@ -75,7 +94,7 @@ export function medById(id) {
 
 // ---- block scheduling (shared across scenarios) ----
 
-export const BLOCK_TIMES = { morning: '8:00 am', afternoon: '1:00 pm', evening: '9:00 pm' }
+export const BLOCK_TIMES = { morning: '8:00 am', afternoon: '1:00 pm', evening: '6:00 pm' }
 export const BLOCK_ORDER = ['morning', 'afternoon', 'evening']
 
 export function blockLabel(block) {
@@ -87,20 +106,20 @@ export function blockTime(block) {
 }
 
 // ---- scenario-specific regimen ----
-// The standard day: two morning medications, one in the afternoon, one in
-// the evening — every scenario uses this except the medication-change
-// scenario, where Ramipril's dosage has changed and Melatonin has been
-// discontinued.
+// The standard day: five prescriptions across three blocks — two in the
+// morning, two in the afternoon, one in the evening — every scenario uses
+// this except the medication-change scenario, where Ramipril's dosage has
+// changed and Omeprazole has been discontinued.
 
 const MORNING_STANDARD = ['metformin', 'ramipril']
-const AFTERNOON_STANDARD = ['atorvastatin']
-const EVENING_STANDARD = ['melatonin']
+const AFTERNOON_STANDARD = ['atorvastatin', 'amlodipine']
+const EVENING_STANDARD = ['omeprazole']
 
 const MORNING_BY_SCENARIO = {
   [SCENARIOS.CHANGE]: ['metformin', 'ramipril-changed'],
 }
 const EVENING_BY_SCENARIO = {
-  [SCENARIOS.CHANGE]: [], // melatonin discontinued
+  [SCENARIOS.CHANGE]: [], // omeprazole discontinued
 }
 
 export function itemsForBlock(block, scenario) {
@@ -133,8 +152,8 @@ export const CHANGES = {
     },
     {
       type: 'discontinued',
-      medName: 'Melatonin',
-      old: { label: 'Melatonin', value: '3 mg' },
+      medName: 'Omeprazole',
+      old: { label: 'Omeprazole', value: '20 mg' },
       new: null,
     },
   ],

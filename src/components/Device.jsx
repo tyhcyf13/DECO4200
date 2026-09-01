@@ -13,6 +13,7 @@ import {
   blockLabel,
   blockTime,
   changesForScenario,
+  itemsForBlock,
   medById,
   totalMedCount,
 } from '../meds.js'
@@ -119,13 +120,15 @@ function screenFor(context) {
       const currentIdx = BLOCK_ORDER.indexOf(context.block)
       const columns = BLOCK_ORDER.map((key, i) => {
         const done = i <= currentIdx
+        const count = itemsForBlock(key, context.scenario).length
         return {
           key,
           label: blockLabel(key),
           time: blockTime(key),
+          count,
           isActive: key === context.block,
           fillPct: done ? 100 : 0,
-          status: done ? 'Done' : `Due ${blockTime(key)}`,
+          status: done ? 'Done' : count === 0 ? 'Nothing scheduled' : `Due ${blockTime(key)}`,
         }
       })
       return <NextScreen columns={columns} />

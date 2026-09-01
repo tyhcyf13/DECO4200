@@ -413,7 +413,7 @@
   color: var(--color-text);
 }
 
-.next-col__time {
+.next-col__count {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-muted);
