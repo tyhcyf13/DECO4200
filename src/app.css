@@ -74,7 +74,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-xl);
-  padding: var(--space-6);
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
   box-shadow: var(--shadow-lg);
   transition: opacity var(--duration-slow) var(--ease-standard),
     filter var(--duration-slow) var(--ease-standard);
@@ -93,7 +93,22 @@
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-7) var(--space-9) var(--space-7) var(--space-7);
+  /* The hardware keys live inside this same rounded rectangle, docked along
+     the bottom, so the screen is a column: content area, then key bar. */
+  display: flex;
+  flex-direction: column;
+}
+
+.device__screen-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* A safety net, not the expected case: content is sized to fit at every
+     supported width, but scrolling here beats silently clipping a line if
+     some future content ever runs long. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: clamp(var(--space-5), 4vw, var(--space-7)) clamp(var(--space-6), 6vw, var(--space-9))
+    clamp(var(--space-5), 4vw, var(--space-7)) clamp(var(--space-5), 4vw, var(--space-7));
   display: flex;
   /* Centers the .screen content block both axes — .screen itself is no
      longer stretched to full width, so it shrink-wraps to its widest line
@@ -105,11 +120,14 @@
 }
 
 .device__keys {
+  flex: 0 0 auto;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-6);
+  gap: clamp(var(--space-3), 3vw, var(--space-6));
+  padding: clamp(var(--space-3), 2vw, var(--space-5)) clamp(var(--space-3), 3vw, var(--space-5));
+  border-top: 1px solid var(--color-border);
 }
 
 .key {
@@ -143,22 +161,22 @@
 }
 
 .key--help {
-  width: 52px;
-  height: 52px;
+  width: clamp(40px, 7vw, 52px);
+  height: clamp(40px, 7vw, 52px);
   border-radius: var(--radius-round);
-  font-size: 19px;
+  font-size: clamp(16px, 3vw, 19px);
 }
 
 .key--later {
-  padding: var(--space-4) var(--space-6);
-  font-size: 15px;
+  padding: clamp(var(--space-2), 2vw, var(--space-4)) clamp(var(--space-3), 3vw, var(--space-6));
+  font-size: clamp(13px, 2.5vw, 15px);
   letter-spacing: 0.03em;
 }
 
 .key--done {
-  min-width: 176px;
-  padding: var(--space-4) var(--space-8);
-  font-size: 17px;
+  min-width: clamp(120px, 24vw, 176px);
+  padding: clamp(var(--space-3), 2vw, var(--space-4)) clamp(var(--space-4), 4vw, var(--space-8));
+  font-size: clamp(14px, 2.5vw, 17px);
   letter-spacing: 0.03em;
   border-color: var(--color-accent-dim);
 }
@@ -196,7 +214,7 @@
   max-width: 640px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: clamp(var(--space-2), 1.5vw, var(--space-3));
   animation: screen-fade var(--duration-base) var(--ease-standard);
 }
 
@@ -219,21 +237,30 @@
 
 .screen-headline {
   margin: 0;
-  font-size: 40px;
+  /* Fluid between 26px (a small phone) and 40px (900px+ device) — lower than
+     the 32px floor first tried, because at 32px+ a two-line greeting like
+     "Good morning, Alex" could wrap and push the rest of the content down
+     into the key bar. */
+  font-size: clamp(26px, 18.3px + 2.41vw, 40px);
   font-weight: var(--font-weight-heading);
   color: var(--color-text);
 }
 
 .screen-detail {
   margin: 0;
-  font-size: 24px;
+  font-size: clamp(17px, 13.1px + 1.21vw, 24px);
   color: var(--color-text-muted);
 }
 
 .audio-cue {
-  position: absolute;
-  top: var(--space-5);
-  right: var(--space-6);
+  /* A normal-flow first row, right-aligned, rather than an absolute overlay
+     pinned to the screen's corner — a fixed-position badge could overlap
+     the headline once both the device and its text became fluid-sized, since
+     nothing then guaranteed they'd never occupy the same space. As the first
+     child of the centered content block it still reads as "upper right,"
+     but can never collide with what follows it. */
+  align-self: flex-end;
+  flex-shrink: 0;
   font-size: 13px;
   color: var(--color-accent-strong);
   background: var(--color-accent-wash);
@@ -250,7 +277,7 @@
 }
 
 .quiet-clock {
-  font-size: 64px;
+  font-size: clamp(32px, 14.3px + 5.52vw, 64px);
   font-weight: var(--font-weight-heading);
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
@@ -270,7 +297,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-4);
-  font-size: 28px;
+  font-size: clamp(20px, 15.6px + 1.38vw, 28px);
 }
 
 .med-list__name {
@@ -279,14 +306,16 @@
 }
 
 .med-list__strength {
-  font-size: 20px;
+  font-size: clamp(16px, 13.8px + 0.69vw, 20px);
   color: var(--color-text-muted);
 }
 
 /* dose */
 .dose-name {
   margin: var(--space-2) 0 0;
-  font-size: 44px;
+  /* Floor stays at 40px — the accessibility minimum for the single
+     medication name shown during the actual dose-taking moment. */
+  font-size: clamp(40px, 37.8px + 0.69vw, 44px);
   line-height: 1.05;
   font-weight: var(--font-weight-heading);
   color: var(--color-text);
@@ -294,14 +323,14 @@
 
 .dose-strength {
   margin: 0;
-  font-size: 20px;
+  font-size: clamp(18px, 16.9px + 0.34vw, 20px);
   color: var(--color-text-muted);
 }
 
 .pips {
   display: flex;
   gap: var(--space-3);
-  margin-top: var(--space-5);
+  margin-top: clamp(var(--space-3), 2vw, var(--space-5));
 }
 
 .pip {
@@ -385,7 +414,7 @@
 }
 
 .screen-headline--confirmed {
-  font-size: 24px;
+  font-size: clamp(20px, 17.8px + 0.69vw, 24px);
   font-weight: var(--font-weight-heading);
   color: var(--color-text);
   margin: 0;

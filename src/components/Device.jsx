@@ -151,36 +151,38 @@ export default function Device({ context, dispatch }) {
   return (
     <div className="device">
       <div className={cx('device__bezel', isDim && 'device__bezel--dim')}>
-        <div className="device__screen" role="group" aria-live="polite">
-          {screenFor(context)}
+        <div className="device__screen">
+          <div className="device__screen-content" role="group" aria-live="polite">
+            {screenFor(context)}
+          </div>
+          <div className="device__keys">
+            <button
+              type="button"
+              className="key key--help"
+              disabled={!helpEnabled}
+              onClick={() => dispatch({ type: 'HELP' })}
+              aria-label="Help: read this screen aloud, check whether a dose was already taken, or open medication information"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              className="key key--later"
+              disabled={!laterEnabled}
+              onClick={() => dispatch({ type: 'LATER' })}
+            >
+              LATER
+            </button>
+            <button
+              type="button"
+              className={cx('key', 'key--done', doneEnabled && 'key--illuminated')}
+              disabled={!doneEnabled}
+              onClick={() => dispatch({ type: 'DONE' })}
+            >
+              DONE
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="device__keys">
-        <button
-          type="button"
-          className="key key--help"
-          disabled={!helpEnabled}
-          onClick={() => dispatch({ type: 'HELP' })}
-          aria-label="Help: read this screen aloud, check whether a dose was already taken, or open medication information"
-        >
-          ?
-        </button>
-        <button
-          type="button"
-          className="key key--later"
-          disabled={!laterEnabled}
-          onClick={() => dispatch({ type: 'LATER' })}
-        >
-          LATER
-        </button>
-        <button
-          type="button"
-          className={cx('key', 'key--done', doneEnabled && 'key--illuminated')}
-          disabled={!doneEnabled}
-          onClick={() => dispatch({ type: 'DONE' })}
-        >
-          DONE
-        </button>
       </div>
       <div className="device__stand" aria-hidden="true" />
     </div>
