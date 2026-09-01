@@ -95,7 +95,11 @@
   border-radius: var(--radius-lg);
   padding: var(--space-7) var(--space-9) var(--space-7) var(--space-7);
   display: flex;
-  align-items: flex-start;
+  /* Centers the .screen content block both axes — .screen itself is no
+     longer stretched to full width, so it shrink-wraps to its widest line
+     and sits centered as one composition, with each line still left-aligned
+     within that block (never centered line-by-line). */
+  align-items: center;
   justify-content: center;
   text-align: left;
 }
@@ -189,7 +193,7 @@
 /* ---------------------------------------------------------------------- */
 
 .screen {
-  width: 100%;
+  max-width: 640px;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -215,14 +219,14 @@
 
 .screen-headline {
   margin: 0;
-  font-size: 26px;
+  font-size: 34px;
   font-weight: var(--font-weight-heading);
   color: var(--color-text);
 }
 
 .screen-detail {
   margin: 0;
-  font-size: 17px;
+  font-size: 21px;
   color: var(--color-text-muted);
 }
 
@@ -266,7 +270,7 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-4);
-  font-size: 20px;
+  font-size: 26px;
 }
 
 .med-list__name {
@@ -275,7 +279,7 @@
 }
 
 .med-list__strength {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--color-text-muted);
 }
 
@@ -489,23 +493,34 @@
 /* Spans roughly the same width as the device above it, but stays flat and
    muted (no shadow-lg, no glow) so it never reads as part of the physical
    product — explanatory scaffolding for the presentation, kept visually
-   secondary to the device. Laid out as two columns once there's room for
-   them; the scenario picker (listed first in the markup) spans both via
-   `scaffold__section--full` since it's the primary control and sits at the
-   top, with scenario progress / background activity / support / principles
-   flowing into the two columns underneath. */
+   secondary to the device (flat surface, no shadow-lg/glow, muted type).
+   Structured as three clearly separated zones, each its own visual group
+   rather than one running block: the scenario selector (full width, the
+   primary control, sits at the top), then two `.scaffold__row` two-column
+   groups underneath — progress/background, then support/principles — each
+   set off by a divider and its own top spacing so the zones never blur
+   together. */
 .scaffold {
   width: clamp(320px, 82vw, 900px);
   max-width: 100%;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: var(--space-7);
-  row-gap: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  line-height: 1.5;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
+}
+
+.scaffold__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-7);
+  row-gap: var(--space-7);
+  padding-top: var(--space-7);
+  border-top: 1px solid var(--color-border);
 }
 
 .scaffold__section {
@@ -515,34 +530,30 @@
   min-width: 0; /* allow grid children to shrink instead of overflowing */
 }
 
-.scaffold__section--full {
-  grid-column: 1 / -1;
-}
-
 @media (max-width: 700px) {
-  .scaffold {
+  .scaffold__row {
     grid-template-columns: 1fr;
   }
 }
 
 .scaffold__heading {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: var(--font-weight-heading);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-faint);
 }
 
 .scaffold__hint {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--color-text-muted);
 }
 
 .scaffold__body {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: var(--font-weight-heading);
   color: var(--color-text);
 }
@@ -554,7 +565,7 @@
 
 .scaffold__actions .ds-btn {
   padding: var(--space-3) var(--space-4);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .scenario-picker {
@@ -571,7 +582,7 @@
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-family: var(--font-family);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text-muted);
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-standard),
@@ -599,7 +610,7 @@
 }
 
 .stage-track__item {
-  font-size: 14px;
+  font-size: 15px;
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-faint);
   border-left: 2px solid var(--color-border);
@@ -626,7 +637,7 @@
 .bg-log__row {
   display: flex;
   gap: var(--space-3);
-  font-size: 13px;
+  font-size: 15px;
   border-left: 2px solid transparent;
   padding-left: var(--space-3);
   margin-left: calc(var(--space-3) * -1);
@@ -634,6 +645,7 @@
 
 .bg-log__time {
   flex-shrink: 0;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-faint);
 }
@@ -677,7 +689,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  font-size: 13px;
+  font-size: 16px;
   color: var(--color-text-muted);
   line-height: 1.5;
 }
