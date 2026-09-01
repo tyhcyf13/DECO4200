@@ -9,8 +9,26 @@
 }
 
 .page__header {
-  max-width: 640px;
+  max-width: 820px;
   margin-bottom: var(--space-8);
+}
+
+.page__lede,
+.page__principle {
+  max-width: 640px;
+}
+
+.page__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.page__focus-toggle {
+  flex-shrink: 0;
+  font-size: 14px;
+  padding: var(--space-2) var(--space-4);
 }
 
 .page__eyebrow {
@@ -48,6 +66,63 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-8);
+}
+
+/* Focus mode — for showing this to a real participant on a tablet. Header
+   and background panel are unmounted (not just hidden) while active; this
+   just centers the remaining device-wrapper and lets the device grow past
+   its normal 900px cap to fill the space. Works as a page-level state on
+   its own, and layers with real OS fullscreen (:fullscreen) where the
+   browser grants it, so it isn't dependent on that API existing. */
+.page--focus {
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+}
+
+.page--focus .stage {
+  width: 100%;
+}
+
+.device-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page--focus .device-wrapper .device,
+.device-wrapper:fullscreen .device,
+.device-wrapper:-webkit-full-screen .device {
+  width: min(90vw, 138vh);
+  max-width: none;
+}
+
+.device-wrapper:fullscreen,
+.device-wrapper:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-bg);
+}
+
+.page__focus-exit {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  font-size: 13px;
+  padding: var(--space-2) var(--space-4);
+  opacity: 0.55;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.page__focus-exit:hover,
+.page__focus-exit:focus-visible {
+  opacity: 1;
 }
 
 /* ---------------------------------------------------------------------- */

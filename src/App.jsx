@@ -12,7 +12,7 @@ import {
 import { describeTransition, initialLogLines } from './background.js'
 import { itemsForBlock, medById } from './meds.js'
 import { confirmedTimeFor } from './timeUtils.js'
-import { formatClock } from '../_ds/nocturne-b8258e1f-79a7-4445-a0b9-05991948f0a0/_ds_bundle.js'
+import { cx, formatClock } from '../_ds/nocturne-b8258e1f-79a7-4445-a0b9-05991948f0a0/_ds_bundle.js'
 import Device from './components/Device.jsx'
 import BackgroundPanel from './components/BackgroundPanel.jsx'
 
@@ -26,8 +26,52 @@ export default function App() {
   const [context, setContext] = useState(() => initialContext(SCENARIOS.NORMAL))
   const [log, setLog] = useState(() => initialLogLines(SCENARIOS.NORMAL).map(toLogEntry))
   const [supportConnected, setSupportConnected] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const contextRef = useRef(context)
   contextRef.current = context
+  const deviceWrapperRef = useRef(null)
+
+  // Focus mode is for showing this to a real participant on a tablet: it
+  // hides the header and the whole background panel (that panel is
+  // explanatory scaffolding for presenting the concept, not part of the
+  // imagined product — a test participant seeing it, or being able to jump
+  // scenarios themselves, would spoil what's actually being tested), and
+  // lets the device grow to fill the space. It also requests real
+  // OS-level fullscreen where the browser supports it, to hide Safari's own
+  // chrome — but works as a plain CSS state even where that API doesn't
+  // exist, so it isn't load-bearing.
+  function enterFocusMode() {
+    setFocusMode(true)
+    const el = deviceWrapperRef.current
+    const request =
+      el?.requestFullscreen || el?.webkitRequestFullscreen || el?.webkitEnterFullscreen
+    request?.call(el)?.catch?.(() => {})
+  }
+
+  function exitFocusMode() {
+    setFocusMode(false)
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen
+      exit?.call(document)?.catch?.(() => {})
+    }
+  }
+
+  // If the participant (or facilitator) exits native fullscreen directly —
+  // Escape, a swipe-down gesture, the OS chrome — keep focusMode in sync
+  // rather than leaving a stale "focused" view with no way back in.
+  useEffect(() => {
+    function onFullscreenChange() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        setFocusMode(false)
+      }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange)
+    }
+  }, [])
 
   // handleToggleSupport is recreated fresh each render and only ever called
   // from a fresh onClick prop (never a stale listener), so reading the
@@ -106,6 +150,11 @@ export default function App() {
           e.preventDefault()
           dispatch({ type: 'HELP' })
         }
+      } else if (e.key === 'Escape') {
+        // Covers the case native fullscreen was never actually entered
+        // (unsupported browser) — the fullscreenchange listener handles it
+        // when native fullscreen did engage and gets exited this way.
+        setFocusMode(false)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -115,32 +164,55 @@ export default function App() {
   const canSkipWait = context.state === STATES.QUIET || context.state === STATES.DEFERRED
 
   return (
-    <div className="page">
-      <header className="page__header">
-        <p className="page__eyebrow">DECO4200 — design concept prototype</p>
-        <h1 className="page__title">Medication companion</h1>
-        <p className="page__lede">
-          One simplified daily routine, delivered through a single quiet device. Everything
-          around it — prescriptions, timing, refills — is background work you never have to see.
-        </p>
-        <p className="page__principle">
-          Digital for complexity. Physical for interaction.
-        </p>
-      </header>
+    <div className={cx('page', focusMode && 'page--focus')}>
+      {!focusMode && (
+        <header className="page__header">
+          <div className="page__header-row">
+            <div>
+              <p className="page__eyebrow">DECO4200 — design concept prototype</p>
+              <h1 className="page__title">Medication companion</h1>
+            </div>
+            <button type="button" className="ds-btn page__focus-toggle" onClick={enterFocusMode}>
+              Fullscreen for testing
+            </button>
+          </div>
+          <p className="page__lede">
+            One simplified daily routine, delivered through a single quiet device. Everything
+            around it — prescriptions, timing, refills — is background work you never have to see.
+          </p>
+          <p className="page__principle">
+            Digital for complexity. Physical for interaction.
+          </p>
+        </header>
+      )}
 
       <div className="stage">
-        <Device context={context} dispatch={dispatch} />
-        <BackgroundPanel
-          scenario={context.scenario}
-          onSelectScenario={handleSelectScenario}
-          stage={stageForState(context.state)}
-          log={log}
-          onRestart={handleRestart}
-          canSkipWait={canSkipWait}
-          onSkipWait={() => dispatch({ type: 'SYSTEM_TICK' })}
-          supportConnected={supportConnected}
-          onToggleSupport={handleToggleSupport}
-        />
+        <div ref={deviceWrapperRef} className="device-wrapper">
+          <Device context={context} dispatch={dispatch} />
+          {focusMode && (
+            <button
+              type="button"
+              className="ds-btn page__focus-exit"
+              onClick={exitFocusMode}
+              aria-label="Exit fullscreen"
+            >
+              Exit
+            </button>
+          )}
+        </div>
+        {!focusMode && (
+          <BackgroundPanel
+            scenario={context.scenario}
+            onSelectScenario={handleSelectScenario}
+            stage={stageForState(context.state)}
+            log={log}
+            onRestart={handleRestart}
+            canSkipWait={canSkipWait}
+            onSkipWait={() => dispatch({ type: 'SYSTEM_TICK' })}
+            supportConnected={supportConnected}
+            onToggleSupport={handleToggleSupport}
+          />
+        )}
       </div>
     </div>
   )
