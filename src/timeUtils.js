@@ -11,6 +11,14 @@ export function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+// { h: 8, m: 6 } -> "8:06 am"
+export function formatStamp(stamp) {
+  if (!stamp) return ''
+  const period = stamp.h >= 12 ? 'pm' : 'am'
+  const h12 = ((stamp.h + 11) % 12) + 1
+  return `${h12}:${String(stamp.m).padStart(2, '0')} ${period}`
+}
+
 const BLOCK_START = {
   morning: { h: 8, m: 0 },
   afternoon: { h: 13, m: 0 },

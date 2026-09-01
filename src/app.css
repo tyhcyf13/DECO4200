@@ -29,10 +29,18 @@
 }
 
 .page__lede {
-  margin: 0;
+  margin: 0 0 var(--space-3);
   font-size: 15px;
   line-height: 1.55;
   color: var(--color-text-muted);
+}
+
+.page__principle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: 0.02em;
+  color: var(--color-accent-strong);
 }
 
 .stage {
@@ -507,6 +515,13 @@
   color: var(--color-text-muted);
 }
 
+.scaffold__body {
+  margin: 0;
+  font-size: 15px;
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text);
+}
+
 .scaffold__actions {
   display: flex;
   gap: var(--space-3);
@@ -587,6 +602,9 @@
   display: flex;
   gap: var(--space-3);
   font-size: 13px;
+  border-left: 2px solid transparent;
+  padding-left: var(--space-3);
+  margin-left: calc(var(--space-3) * -1);
 }
 
 .bg-log__time {
@@ -597,4 +615,48 @@
 
 .bg-log__text {
   color: var(--color-text-muted);
+}
+
+/* Physical/digital legend and per-row tagging — single accent hue, two
+   treatments (filled vs. outline dot; accented left-border vs. none) rather
+   than a second color, per the one-accent rule. */
+
+.bg-log__legend-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-round);
+  margin-right: var(--space-1);
+}
+
+.bg-log__legend-dot--physical {
+  background: var(--color-accent);
+}
+
+.bg-log__legend-dot--digital {
+  background: transparent;
+  border: 1px solid var(--color-accent-dim);
+}
+
+.bg-log__row--physical {
+  border-left-color: var(--color-accent-dim);
+}
+
+.bg-log__row--physical .bg-log__text {
+  color: var(--color-text);
+}
+
+.safety-notes {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.safety-notes li {
+  padding-left: var(--space-1);
 }

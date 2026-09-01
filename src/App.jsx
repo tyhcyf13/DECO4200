@@ -10,27 +10,41 @@ import {
   stageForState,
 } from './stateMachine.js'
 import { describeTransition, initialLogLines } from './background.js'
-import { BLOCKS, medById } from './meds.js'
+import { itemsForBlock, medById } from './meds.js'
 import { confirmedTimeFor } from './timeUtils.js'
 import { formatClock } from '../_ds/nocturne-b8258e1f-79a7-4445-a0b9-05991948f0a0/_ds_bundle.js'
 import Device from './components/Device.jsx'
 import BackgroundPanel from './components/BackgroundPanel.jsx'
 
-function itemsForBlock(block) {
-  return BLOCKS[block].items.map((m) => m.id)
-}
-
 let logId = 0
-function toLogEntry(text) {
+function toLogEntry({ text, domain }) {
   logId += 1
-  return { id: logId, time: formatClock(new Date()), text }
+  return { id: logId, time: formatClock(new Date()), text, domain }
 }
 
 export default function App() {
   const [context, setContext] = useState(() => initialContext(SCENARIOS.NORMAL))
   const [log, setLog] = useState(() => initialLogLines(SCENARIOS.NORMAL).map(toLogEntry))
+  const [supportConnected, setSupportConnected] = useState(false)
   const contextRef = useRef(context)
   contextRef.current = context
+
+  // handleToggleSupport is recreated fresh each render and only ever called
+  // from a fresh onClick prop (never a stale listener), so reading the
+  // `supportConnected` closure directly is safe here — unlike `dispatch`,
+  // which reads contextRef because it's also invoked from a keydown
+  // listener attached once on mount.
+  function handleToggleSupport() {
+    const next = !supportConnected
+    setSupportConnected(next)
+    setLog((l) => [
+      ...l,
+      toLogEntry({
+        text: next ? 'Support person connected by user.' : 'Support person disconnected by user.',
+        domain: 'digital',
+      }),
+    ])
+  }
 
   // Reads contextRef (not the `context` closure) so this stays correct no
   // matter which render's `dispatch` closure ends up invoked — the keydown
@@ -109,6 +123,9 @@ export default function App() {
           One simplified daily routine, delivered through a single quiet device. Everything
           around it — prescriptions, timing, refills — is background work you never have to see.
         </p>
+        <p className="page__principle">
+          Digital for complexity. Physical for interaction.
+        </p>
       </header>
 
       <div className="stage">
@@ -121,6 +138,8 @@ export default function App() {
           onRestart={handleRestart}
           canSkipWait={canSkipWait}
           onSkipWait={() => dispatch({ type: 'SYSTEM_TICK' })}
+          supportConnected={supportConnected}
+          onToggleSupport={handleToggleSupport}
         />
       </div>
     </div>

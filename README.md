@@ -5,6 +5,9 @@ medication management companion. It's a design concept, not a product — there 
 no backend, no auth, and no persistence; everything lives in memory for the
 length of a browser session.
 
+**Live demo:** https://tyhcyf13.github.io/DECO4200/ (add to your phone's home
+screen for a full-screen, app-like launch — see [Deployment](#deployment)).
+
 ## The concept
 
 Someone managing several long-term medications shouldn't have to think in terms
@@ -14,17 +17,28 @@ into **one simplified daily routine**, delivered through a **single quiet
 device**. The person only ever answers one question: *what do I need to take
 right now?*
 
+The core proposition: **digital for complexity, physical for interaction.**
+Everything that's hard — reconciling prescriptions, sequencing doses, tracking
+changes, forecasting refills — happens in the digital layer, invisibly. The
+physical device is where the person actually acts: medication is loaded into
+it, a dose becomes due on it, they confirm on it. The device is never an
+accessory to a phone app; it's the primary everyday interaction.
+
 The prototype renders a device shell (bezel, screen, three hardware keys, a
 stand) and the on-screen UI is driven **only** by those three keys — DONE,
 LATER, and **?**. There is no touch UI, no menu, no nav bar inside the device
 screen. Deferring ("LATER") is treated as a first-class choice, not a failure
 state: the interaction vocabulary deliberately has no red, no alarms, no
-streaks, no scores, and no escalating language.
+streaks, no scores, and no escalating language. Even so, a dose deferred
+several times in a row softens into a calmer "still waiting" prompt rather
+than repeating the same message indefinitely — the user is always offered the
+choice, never pressured.
 
 Beside the device sits a **background-system panel** — explanatory scaffolding
 for the design concept, not part of the imagined product — showing the
-scenario picker, a five-stage progress track, and a timestamped log of what
-the background system is doing on the person's behalf.
+scenario picker, a six-stage progress track, a timestamped log tagged
+digital/physical, an optional (off by default) support-person toggle, and a
+short list of the design's safety/ethics principles.
 
 ## The state machine
 
@@ -32,22 +46,25 @@ The entire interaction model lives in `src/stateMachine.js`, a single,
 dependency-free, pure module (no React, no timers, no DOM). It is deliberately
 the most important file in the prototype — the state machine *is* the
 deliverable, not scaffolding around it. It's covered by
-`src/test/stateMachine.test.js` (`npm test`).
+`src/test/stateMachine.test.js` (`npm test`, 36 tests).
 
-States: `quiet → due → dose → confirmed → next`, with `change` and `info` /
-`deferred` as side states reached only from specific places:
-
-| State       | What's shown                                              | Reached from |
-|-------------|-------------------------------------------------------------|--------------|
-| `quiet`     | Large clock, "Nothing to take until…". Keys dimmed.         | start / `next` |
-| `change`    | "Something changed" interruption for a prescription update. | `quiet` (medication-change scenario only) |
-| `due`       | Greeting, "N medications to take now", names + dosages.     | `quiet`, `change`, `deferred` |
-| `dose`      | One medication at a time, with progress pips.                | `due`, `info` |
-| `info`      | Plain-language purpose, when, how much.                      | `dose` only |
-| `deferred`  | "I will ask again at 8:30." Screen dims, no countdown.        | `due`, `dose` |
-| `confirmed` | Ring + tick, "All N taken · time", next block time.           | `dose` |
-| `next`      | The day as three columns (morning/afternoon/evening).         | `confirmed` |
-| `dayDone`   | "All done for today." Nothing more scheduled.                 | `next`, once no later block has anything scheduled |
+| State            | What's shown                                                     | Reached from |
+|------------------|-------------------------------------------------------------------|--------------|
+| `quiet`          | Large clock, "Nothing to take until…". Only `?` is enabled.       | start / `next` |
+| `setupScan`      | "Scan prescription" (physical pathway only).                      | start (physical setup scenario) |
+| `setupReview`    | Prescription name/dose/timing/instructions to review.              | start (digital pathway), or `setupScan` |
+| `setupLoad`      | "Place [medication] into the indicated compartment."               | `setupReview` |
+| `setupLoaded`    | Ring + tick, "Medication loaded."                                   | `setupLoad` |
+| `change`         | "Something changed" — old (struck through) / new (highlighted).    | `quiet` (a change scenario, morning block only) |
+| `routineUpdated` | Brief confirmation of the routine's new shape.                     | `change` |
+| `due`            | Greeting, "N medications to take now", names + dosages.            | `quiet`, `routineUpdated`, `deferred` |
+| `dose`           | One medication at a time, with progress pips.                       | `due`, `info` |
+| `info`           | Plain-language purpose, when, how much.                             | `dose` only |
+| `didITakeIt`     | "[Block] dose — Recorded as taken — [time]", or "nothing yet."      | `quiet` only, via `?` |
+| `deferred`       | "I will ask again at 8:30." Screen dims, no countdown.               | `due`, `dose` |
+| `confirmed`      | Ring + tick, "All N taken · time", next block time.                  | `dose` |
+| `next`           | The day as three columns (morning/afternoon/evening).                | `confirmed` |
+| `dayDone`        | "All done for today." Nothing more scheduled.                        | `next`, once no later block has anything scheduled |
 
 Two event types drive it: the three hardware keys (`DONE` / `LATER` / `HELP`),
 and `SYSTEM_TICK` — the passage of time (a block becoming due, or a deferred
@@ -55,13 +72,22 @@ reminder firing). `SYSTEM_TICK` is never triggered by a key press, only by a
 timer (or the "Skip wait" control in the background panel, for demo purposes).
 
 Deferring is non-destructive: a block held open by `LATER` keeps whatever was
-already completed and simply re-shows the same `due` prompt at the reminder
-time, with identical wording — never "missed," never escalating.
+already completed and re-shows the same `due` prompt at the reminder time —
+identical wording the first time, softening into "still waiting" phrasing
+(`isStillWaiting`) only after repeated defers, and never described as
+"missed."
+
+A prescription change (new medication, discontinued medication, or changed
+dosage) is scenario data, not a special case in the machine's logic: each
+scenario's medication list is computed by `itemsForBlock(block, scenario)`
+(in `src/meds.js`), so a "new medication" scenario's `due` screen genuinely
+lists one more item, and a "discontinued" scenario's genuinely lists one
+fewer — the interruption isn't just cosmetic.
 
 `src/background.js` is a separate, equally pure module that narrates
-transitions into the background-log sentences. It has no knowledge of UI and
-the state machine has no knowledge of copy or med data — each module has one
-job.
+transitions into the background-log sentences (each tagged `digital` or
+`physical`). It has no knowledge of UI, and the state machine has no
+knowledge of copy or med data — each module has one job.
 
 ## Design system
 
@@ -80,6 +106,11 @@ every color, font, space, radius, and shadow from that file's custom
 properties — nothing is hard-coded. Swapping in the real synced bundle should
 only mean replacing token values, not touching component code.
 
+The digital/physical distinction in the background log reuses this same
+one-accent rule: physical entries get a filled accent dot and an accent-tinted
+left border; digital entries get an outlined dot and stay in the quieter muted
+tone. No second color is introduced.
+
 ## Running it
 
 ```
@@ -96,17 +127,35 @@ too, for testing without a mouse:
 
 - `Enter` or `D` — DONE
 - `L` — LATER
-- `?` — help (read aloud / medication information)
+- `?` — help (read aloud / medication information / "did I take it?" from the
+  resting screen)
 
 ## Scenarios
 
 The background panel's scenario picker resets the whole prototype into one of
-three demo paths:
+eight demo paths:
 
 - **Normal morning** — press DONE through the whole routine.
 - **Deferred morning** — press LATER on the routine or on a dose, then either
-  wait for the simulated reminder or use "Skip wait."
-- **Morning with a medication change** — a change interruption appears before
-  the routine; press DONE ("I understand") to acknowledge it.
+  wait for the simulated reminder or use "Skip wait." Defer twice to see the
+  softened "still waiting" prompt.
+- **"Did I take it?"** — starts already past a confirmed morning dose; press
+  `?` from the resting screen to check on it.
+- **New medication** / **Changed dosage** / **Discontinued medication** — a
+  change interruption appears before the routine; press DONE to acknowledge
+  it, then DONE again on the resulting "Routine updated" screen. The morning
+  routine that follows genuinely reflects the change.
+- **Physical prescription setup** — press DONE to simulate scanning a
+  prescription, review what was detected, then load the medication.
+- **Digital prescription setup** — the same flow without the scan step, since
+  the prescription arrives already verified.
 
-"Restart scenario" replays the current scenario from `quiet`.
+"Restart scenario" replays the current scenario from the start.
+
+## Deployment
+
+Pushing to `main` runs `.github/workflows/deploy.yml`, which tests, builds,
+and publishes to GitHub Pages automatically — no manual deploy step. The site
+also declares a web app manifest and iOS meta tags (see `index.html`,
+`public/manifest.webmanifest`) so it can be added to a phone's home screen and
+launches full-screen, without browser chrome, like a native app.

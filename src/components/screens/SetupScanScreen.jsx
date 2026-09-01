@@ -1,0 +1,11 @@
+import React from 'react'
+
+export default function SetupScanScreen() {
+  return (
+    <div className="screen screen--setup">
+      <p className="screen-eyebrow">Setup</p>
+      <h1 className="screen-headline">Scan prescription</h1>
+      <p className="screen-detail">Hold the prescription up to the device.</p>
+    </div>
+  )
+}

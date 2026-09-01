@@ -1,32 +1,52 @@
 import React from 'react'
 import { cx } from '../../_ds/nocturne-b8258e1f-79a7-4445-a0b9-05991948f0a0/_ds_bundle.js'
-import { STATES, currentMedId, remainingInBlock, isKeyEnabled } from '../stateMachine.js'
-import { BLOCKS, BLOCK_ORDER, MEDICATION_CHANGE, USER_NAME, medById } from '../meds.js'
-import { reminderTimeFor } from '../timeUtils.js'
+import {
+  STATES,
+  currentMedId,
+  remainingInBlock,
+  isKeyEnabled,
+  isStillWaiting,
+} from '../stateMachine.js'
+import { BLOCK_ORDER, CHANGES, SETUP_MED, USER_NAME, blockLabel, blockTime, medById } from '../meds.js'
+import { reminderTimeFor, formatStamp } from '../timeUtils.js'
 import QuietScreen from './screens/QuietScreen.jsx'
+import SetupScanScreen from './screens/SetupScanScreen.jsx'
+import SetupReviewScreen from './screens/SetupReviewScreen.jsx'
+import SetupLoadScreen from './screens/SetupLoadScreen.jsx'
+import SetupLoadedScreen from './screens/SetupLoadedScreen.jsx'
 import ChangeScreen from './screens/ChangeScreen.jsx'
+import RoutineUpdatedScreen from './screens/RoutineUpdatedScreen.jsx'
 import DueScreen from './screens/DueScreen.jsx'
 import DoseScreen from './screens/DoseScreen.jsx'
 import InfoScreen from './screens/InfoScreen.jsx'
+import DidITakeItScreen from './screens/DidITakeItScreen.jsx'
 import DeferredScreen from './screens/DeferredScreen.jsx'
 import ConfirmedScreen from './screens/ConfirmedScreen.jsx'
 import NextScreen from './screens/NextScreen.jsx'
 import DayDoneScreen from './screens/DayDoneScreen.jsx'
 
-function timeLabel(stamp) {
-  if (!stamp) return ''
-  const period = stamp.h >= 12 ? 'pm' : 'am'
-  const h12 = ((stamp.h + 11) % 12) + 1
-  return `${h12}:${String(stamp.m).padStart(2, '0')} ${period}`
-}
-
 function screenFor(context) {
   switch (context.state) {
     case STATES.QUIET:
-      return <QuietScreen nextTime={BLOCKS[context.block].time} />
+      return <QuietScreen nextTime={blockTime(context.block)} />
+
+    case STATES.SETUP_SCAN:
+      return <SetupScanScreen />
+
+    case STATES.SETUP_REVIEW:
+      return <SetupReviewScreen pathway={context.setupPathway} med={SETUP_MED} />
+
+    case STATES.SETUP_LOAD:
+      return <SetupLoadScreen med={SETUP_MED} />
+
+    case STATES.SETUP_LOADED:
+      return <SetupLoadedScreen />
 
     case STATES.CHANGE:
-      return <ChangeScreen change={MEDICATION_CHANGE} />
+      return <ChangeScreen change={CHANGES[context.scenario]} />
+
+    case STATES.ROUTINE_UPDATED:
+      return <RoutineUpdatedScreen change={CHANGES[context.scenario]} />
 
     case STATES.DUE:
       return (
@@ -35,6 +55,7 @@ function screenFor(context) {
           block={context.block}
           remaining={remainingInBlock(context)}
           items={context.items.filter((id) => !context.completed.includes(id)).map(medById)}
+          stillWaiting={isStillWaiting(context)}
         />
       )
 
@@ -48,7 +69,7 @@ function screenFor(context) {
         <DoseScreen
           index={context.doseIndex + 1}
           total={context.items.length}
-          blockLabel={BLOCKS[context.block].label}
+          blockLabel={blockLabel(context.block)}
           med={med}
           pips={pips}
         />
@@ -60,18 +81,27 @@ function screenFor(context) {
       return <InfoScreen med={medById(medId)} listening={context.listening} />
     }
 
+    case STATES.DID_I_TAKE_IT:
+      return (
+        <DidITakeItScreen
+          lastConfirmed={context.lastConfirmed}
+          nextTime={blockTime(context.block)}
+          listening={context.listening}
+        />
+      )
+
     case STATES.DEFERRED:
       return <DeferredScreen reminderTime={reminderTimeFor(context.block)} />
 
     case STATES.CONFIRMED: {
       const nextBlock = BLOCK_ORDER[BLOCK_ORDER.indexOf(context.block) + 1]
       const nextLabel = nextBlock
-        ? `Next medication at ${BLOCKS[nextBlock].time}.`
+        ? `Next medication at ${blockTime(nextBlock)}.`
         : 'Nothing else scheduled today.'
       return (
         <ConfirmedScreen
           count={context.completed.length}
-          timeLabel={timeLabel(context.confirmedAt)}
+          timeLabel={formatStamp(context.confirmedAt)}
           nextLabel={nextLabel}
         />
       )
@@ -83,18 +113,18 @@ function screenFor(context) {
         const done = i <= currentIdx
         return {
           key,
-          label: BLOCKS[key].label,
-          time: BLOCKS[key].time,
+          label: blockLabel(key),
+          time: blockTime(key),
           isActive: key === context.block,
           fillPct: done ? 100 : 0,
-          status: done ? 'Done' : `Due ${BLOCKS[key].time}`,
+          status: done ? 'Done' : `Due ${blockTime(key)}`,
         }
       })
       return <NextScreen columns={columns} />
     }
 
     case STATES.DAY_DONE:
-      return <DayDoneScreen nextTime={BLOCKS.morning.time} />
+      return <DayDoneScreen nextTime={blockTime('morning')} />
 
     default:
       return null
@@ -120,7 +150,7 @@ export default function Device({ context, dispatch }) {
           className="key key--help"
           disabled={!helpEnabled}
           onClick={() => dispatch({ type: 'HELP' })}
-          aria-label="Help: read this screen aloud, or open medication information"
+          aria-label="Help: read this screen aloud, check whether a dose was already taken, or open medication information"
         >
           ?
         </button>
