@@ -7,7 +7,15 @@ import {
   isKeyEnabled,
   isStillWaiting,
 } from '../stateMachine.js'
-import { BLOCK_ORDER, CHANGES, SETUP_MED, USER_NAME, blockLabel, blockTime, medById } from '../meds.js'
+import {
+  BLOCK_ORDER,
+  USER_NAME,
+  blockLabel,
+  blockTime,
+  changesForScenario,
+  medById,
+  totalMedCount,
+} from '../meds.js'
 import { reminderTimeFor, formatStamp } from '../timeUtils.js'
 import QuietScreen from './screens/QuietScreen.jsx'
 import SetupScanScreen from './screens/SetupScanScreen.jsx'
@@ -34,19 +42,19 @@ function screenFor(context) {
       return <SetupScanScreen />
 
     case STATES.SETUP_REVIEW:
-      return <SetupReviewScreen pathway={context.setupPathway} med={SETUP_MED} />
+      return <SetupReviewScreen pathway={context.setupPathway} />
 
     case STATES.SETUP_LOAD:
-      return <SetupLoadScreen med={SETUP_MED} />
+      return <SetupLoadScreen count={totalMedCount(context.scenario)} />
 
     case STATES.SETUP_LOADED:
-      return <SetupLoadedScreen />
+      return <SetupLoadedScreen firstDoseTime={blockTime('morning')} />
 
     case STATES.CHANGE:
-      return <ChangeScreen change={CHANGES[context.scenario]} />
+      return <ChangeScreen changes={changesForScenario(context.scenario)} />
 
     case STATES.ROUTINE_UPDATED:
-      return <RoutineUpdatedScreen change={CHANGES[context.scenario]} />
+      return <RoutineUpdatedScreen />
 
     case STATES.DUE:
       return (

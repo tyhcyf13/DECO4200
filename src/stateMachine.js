@@ -62,20 +62,10 @@ export const STATES = Object.freeze({
 
 export const SCENARIOS = Object.freeze({
   NORMAL: 'normal',
-  DEFERRED: 'deferred',
-  CHECK_STATUS: 'checkStatus',
-  CHANGE_NEW: 'changeNew',
-  CHANGE_DOSAGE: 'changeDosage',
-  CHANGE_DISCONTINUED: 'changeDiscontinued',
+  CHANGE: 'change',
   SETUP_PHYSICAL: 'setupPhysical',
   SETUP_DIGITAL: 'setupDigital',
 })
-
-const CHANGE_SCENARIOS = [
-  SCENARIOS.CHANGE_NEW,
-  SCENARIOS.CHANGE_DOSAGE,
-  SCENARIOS.CHANGE_DISCONTINUED,
-]
 
 const SETUP_SCENARIOS = [SCENARIOS.SETUP_PHYSICAL, SCENARIOS.SETUP_DIGITAL]
 
@@ -97,11 +87,6 @@ function nextBlockWithItems(block, itemsForBlock) {
 
 export function initialContext(scenario = SCENARIOS.NORMAL) {
   const isSetup = SETUP_SCENARIOS.includes(scenario)
-  // This scenario exists to demo the ? "did I take it?" check, so it starts
-  // already past a confirmed morning block — otherwise there'd be nothing
-  // to check on, and the auto-tick to `due` would immediately contradict
-  // "already taken" by asking for the morning dose again.
-  const isCheckStatus = scenario === SCENARIOS.CHECK_STATUS
   return {
     state: isSetup
       ? scenario === SCENARIOS.SETUP_PHYSICAL
@@ -110,7 +95,7 @@ export function initialContext(scenario = SCENARIOS.NORMAL) {
       : STATES.QUIET,
     scenario,
     setupPathway: isSetup ? (scenario === SCENARIOS.SETUP_PHYSICAL ? 'physical' : 'digital') : null,
-    block: isCheckStatus ? 'afternoon' : 'morning',
+    block: 'morning',
     items: [], // med ids in the active block, in dose order
     doseIndex: 0,
     completed: [], // med ids already marked done in the active block
@@ -118,9 +103,9 @@ export function initialContext(scenario = SCENARIOS.NORMAL) {
     deferredFrom: null, // 'due' | 'dose' — which screen requested the defer
     deferCount: 0, // times this block's prompt has been deferred
     confirmedAt: null, // { h, m } wall-clock stamp for the confirmation screen
-    lastConfirmed: isCheckStatus ? { block: 'morning', at: { h: 8, m: 6 } } : null, // { block, at } —
-    // most recent completed block, kept across block changes so
-    // `didITakeIt` can answer even once `quiet` has moved on
+    lastConfirmed: null, // { block, at } — most recent completed block, kept
+    // across block changes so `didITakeIt` (reachable any time via ? from
+    // `quiet`) can answer even once `quiet` has moved on to the next block
     listening: false, // transient "reading aloud" flag on `info` / `didITakeIt`
   }
 }
@@ -177,7 +162,7 @@ export function transition(context, event, deps) {
 
     case STATES.QUIET: {
       if (event.type === 'SYSTEM_TICK') {
-        const hasChange = CHANGE_SCENARIOS.includes(context.scenario) && context.block === 'morning'
+        const hasChange = context.scenario === SCENARIOS.CHANGE && context.block === 'morning'
         return {
           ...context,
           items: items(context.block),

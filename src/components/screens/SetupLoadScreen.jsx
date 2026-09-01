@@ -1,12 +1,13 @@
 import React from 'react'
 
-export default function SetupLoadScreen({ med }) {
+export default function SetupLoadScreen({ count }) {
+  const plural = count === 1 ? 'medication' : 'medications'
   return (
     <div className="screen screen--setup">
-      <p className="screen-eyebrow">Load medication</p>
-      <h1 className="dose-name">{med.name}</h1>
-      <p className="dose-strength">{med.strength}</p>
-      <p className="screen-detail">Place into the indicated compartment.</p>
+      <h1 className="screen-headline">Load your medications</h1>
+      <p className="screen-detail">
+        {count} {plural} · Morning / Afternoon / Evening
+      </p>
     </div>
   )
 }

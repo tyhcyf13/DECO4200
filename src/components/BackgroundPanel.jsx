@@ -3,41 +3,25 @@ import { SCENARIOS, STAGES } from '../stateMachine.js'
 import { cx } from '../../_ds/nocturne-b8258e1f-79a7-4445-a0b9-05991948f0a0/_ds_bundle.js'
 
 const SCENARIO_OPTIONS = [
-  { id: SCENARIOS.NORMAL, label: 'Normal morning', hint: 'Press DONE through the routine.' },
   {
-    id: SCENARIOS.DEFERRED,
-    label: 'Deferred morning',
-    hint: 'Press LATER on the routine or a dose, then wait for the reminder.',
-  },
-  {
-    id: SCENARIOS.CHECK_STATUS,
-    label: '"Did I take it?"',
-    hint: 'Press ? from the resting screen to check the last dose.',
-  },
-  {
-    id: SCENARIOS.CHANGE_NEW,
-    label: 'New medication',
-    hint: 'A change interruption appears first — press DONE to acknowledge, then again to update.',
-  },
-  {
-    id: SCENARIOS.CHANGE_DOSAGE,
-    label: 'Changed dosage',
-    hint: 'A change interruption appears first — press DONE to acknowledge, then again to update.',
-  },
-  {
-    id: SCENARIOS.CHANGE_DISCONTINUED,
-    label: 'Discontinued medication',
-    hint: 'A change interruption appears first — press DONE to acknowledge, then again to update.',
-  },
-  {
-    id: SCENARIOS.SETUP_PHYSICAL,
-    label: 'Physical prescription setup',
-    hint: 'Press DONE to scan, review, and load the medication.',
+    id: SCENARIOS.NORMAL,
+    label: 'Normal morning',
+    hint: 'Press DONE through the day — morning, afternoon, and evening. Try LATER and ? too.',
   },
   {
     id: SCENARIOS.SETUP_DIGITAL,
     label: 'Digital prescription setup',
-    hint: 'Press DONE to review and load the medication.',
+    hint: 'Press DONE to receive the prescription, load the medications, and ready the routine.',
+  },
+  {
+    id: SCENARIOS.SETUP_PHYSICAL,
+    label: 'Physical prescription setup',
+    hint: 'Press DONE to scan the prescription, load the medications, and ready the routine.',
+  },
+  {
+    id: SCENARIOS.CHANGE,
+    label: 'Medication change',
+    hint: 'A change interruption appears first — press DONE ("I understand") to update the routine.',
   },
 ]
 

@@ -6,17 +6,18 @@
 // Every line is tagged 'digital' or 'physical' — this is what makes the
 // digital/physical relationship legible in the background panel: digital
 // entries are the system organising complexity behind the scenes; physical
-// entries are moments where something tangible happened at the device.
+// entries are moments where something tangible happened at the device (a
+// scan, a chime, medication loaded or taken).
 
 import { STATES, SCENARIOS } from './stateMachine.js'
-import { CHANGES, SETUP_MED } from './meds.js'
+import { changesForScenario } from './meds.js'
 import { reminderTimeFor, capitalize } from './timeUtils.js'
 
 const SUPPLY = {
   metformin: { label: 'Metformin', remaining: 58 },
   ramipril: { label: 'Ramipril', remaining: 29 },
   atorvastatin: { label: 'Atorvastatin', remaining: 44 },
-  aspirin: { label: 'Aspirin', remaining: 30 },
+  melatonin: { label: 'Melatonin', remaining: 27 },
 }
 
 function d(text) {
@@ -27,10 +28,11 @@ function p(text) {
 }
 
 export function initialLogLines(scenario) {
-  if (scenario === SCENARIOS.SETUP_PHYSICAL || scenario === SCENARIOS.SETUP_DIGITAL) {
-    return scenario === SCENARIOS.SETUP_DIGITAL
-      ? [d(`Verified prescription received for ${SETUP_MED.name}.`)]
-      : []
+  if (scenario === SCENARIOS.SETUP_DIGITAL) {
+    return [d('Prescription received from pharmacist.'), d('Prescription verified.')]
+  }
+  if (scenario === SCENARIOS.SETUP_PHYSICAL) {
+    return [] // nothing has happened yet — the user hasn't scanned anything
   }
 
   const lines = [
@@ -39,13 +41,9 @@ export function initialLogLines(scenario) {
     d('Dose sequence chosen — Metformin first (with food).'),
   ]
 
-  const change = CHANGES[scenario]
-  if (change) {
-    lines.push(d('New prescription received.'), d('Existing routine compared.'), d(changeSummaryLine(change)))
-  }
-
-  if (scenario === SCENARIOS.CHECK_STATUS) {
-    lines.push(d('Morning dose confirmed at 8:06 am.'))
+  if (scenario === SCENARIOS.CHANGE) {
+    lines.push(d('Updated prescription received.'), d('Existing routine compared.'))
+    changesForScenario(scenario).forEach((change) => lines.push(d(changeSummaryLine(change))))
   }
 
   return lines
@@ -54,9 +52,6 @@ export function initialLogLines(scenario) {
 function changeSummaryLine(change) {
   if (change.type === 'dosage') {
     return `${change.old.label} dosage changed: ${change.old.value} → ${change.new.value}.`
-  }
-  if (change.type === 'new') {
-    return `${change.new.label} added to morning routine.`
   }
   return `${change.old.label} discontinued.`
 }
@@ -68,28 +63,45 @@ export function describeTransition(prevContext, event, nextContext, deps) {
   const { medLookup } = deps
   const lines = []
 
-  // ---- setup flow (prescription -> medication -> routine) ----
+  // ---- prescription setup (scan/receive -> load -> ready) ----
 
   if (prevContext.state === STATES.SETUP_SCAN && event.type === 'DONE') {
-    lines.push(p('Prescription scanned.'), d('Medication information extracted.'))
+    lines.push(
+      p('Physical prescription detected.'),
+      d('Prescription information read.'),
+      d('Medication instructions extracted.'),
+      d('Prescription verified against pharmacy record.')
+    )
   }
+
   if (prevContext.state === STATES.SETUP_REVIEW && event.type === 'DONE') {
-    lines.push(d(`${SETUP_MED.name} added to routine.`))
+    if (prevContext.setupPathway === 'digital') {
+      lines.push(
+        d('Routine transmitted securely.'),
+        d('Medication schedule created.'),
+        d('Medication loading required.')
+      )
+    } else {
+      lines.push(d('Routine created.'), d('Medication loading required.'))
+    }
   }
+
   if (prevContext.state === STATES.SETUP_LOAD && event.type === 'DONE') {
-    lines.push(p(`${SETUP_MED.name} loaded into compartment.`))
-  }
-  if (prevContext.state === STATES.SETUP_LOADED && event.type === 'DONE') {
-    lines.push(d('Morning routine prepared.'))
+    lines.push(p('Routine ready.'))
   }
 
   // ---- prescription change ----
 
-  if (prevContext.state === STATES.CHANGE && event.type === 'DONE') {
-    lines.push(d('User informed.'))
+  if (
+    prevContext.state === STATES.QUIET &&
+    event.type === 'SYSTEM_TICK' &&
+    nextContext.state === STATES.CHANGE
+  ) {
+    lines.push(d('User notified.'))
   }
-  if (prevContext.state === STATES.ROUTINE_UPDATED && event.type === 'DONE') {
-    lines.push(d('Routine updated.'))
+
+  if (prevContext.state === STATES.CHANGE && event.type === 'DONE') {
+    lines.push(d('Previous instruction retained until change takes effect.'), d('New routine scheduled.'))
   }
 
   // ---- due / deferred ----
@@ -150,5 +162,5 @@ export function describeTransition(prevContext, event, nextContext, deps) {
 }
 
 function baseId(id) {
-  return id.replace(/-pm$/, '')
+  return id.replace(/-pm$|-changed$/, '')
 }

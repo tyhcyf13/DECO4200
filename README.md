@@ -46,16 +46,16 @@ The entire interaction model lives in `src/stateMachine.js`, a single,
 dependency-free, pure module (no React, no timers, no DOM). It is deliberately
 the most important file in the prototype — the state machine *is* the
 deliverable, not scaffolding around it. It's covered by
-`src/test/stateMachine.test.js` (`npm test`, 36 tests).
+`src/test/stateMachine.test.js` (`npm test`, 34 tests).
 
 | State            | What's shown                                                     | Reached from |
 |------------------|-------------------------------------------------------------------|--------------|
 | `quiet`          | Large clock, "Nothing to take until…". Only `?` is enabled.       | start / `next` |
-| `setupScan`      | "Scan prescription" (physical pathway only).                      | start (physical setup scenario) |
-| `setupReview`    | Prescription name/dose/timing/instructions to review.              | start (digital pathway), or `setupScan` |
-| `setupLoad`      | "Place [medication] into the indicated compartment."               | `setupReview` |
-| `setupLoaded`    | Ring + tick, "Medication loaded."                                   | `setupLoad` |
-| `change`         | "Something changed" — old (struck through) / new (highlighted).    | `quiet` (a change scenario, morning block only) |
+| `setupScan`      | "Scan your prescription" (physical pathway only).                 | start (physical setup scenario) |
+| `setupReview`    | "Prescription received" (digital) / "Prescription read" (physical).| start (digital pathway), or `setupScan` |
+| `setupLoad`      | "Load your medications — N medications · Morning/Afternoon/Evening".| `setupReview` |
+| `setupLoaded`    | Ring + tick, "Routine ready — first dose due at [time]".            | `setupLoad` |
+| `change`         | "Something changed" — every change at once, old (struck through) / new (highlighted).| `quiet` (medication-change scenario, morning block only) |
 | `routineUpdated` | Brief confirmation of the routine's new shape.                     | `change` |
 | `due`            | Greeting, "N medications to take now", names + dosages.            | `quiet`, `routineUpdated`, `deferred` |
 | `dose`           | One medication at a time, with progress pips.                       | `due`, `info` |
@@ -70,6 +70,9 @@ Two event types drive it: the three hardware keys (`DONE` / `LATER` / `HELP`),
 and `SYSTEM_TICK` — the passage of time (a block becoming due, or a deferred
 reminder firing). `SYSTEM_TICK` is never triggered by a key press, only by a
 timer (or the "Skip wait" control in the background panel, for demo purposes).
+Deferring and "did I take it?" aren't scenarios of their own — they're core
+interactions of the `LATER` and `?` keys, available in any scenario, most
+naturally explored during the Normal morning day.
 
 Deferring is non-destructive: a block held open by `LATER` keeps whatever was
 already completed and re-shows the same `due` prompt at the reminder time —
@@ -77,12 +80,14 @@ identical wording the first time, softening into "still waiting" phrasing
 (`isStillWaiting`) only after repeated defers, and never described as
 "missed."
 
-A prescription change (new medication, discontinued medication, or changed
-dosage) is scenario data, not a special case in the machine's logic: each
+A prescription change (a dosage change, a discontinued medication) is
+scenario data, not a special case in the machine's logic: the medication-change
 scenario's medication list is computed by `itemsForBlock(block, scenario)`
-(in `src/meds.js`), so a "new medication" scenario's `due` screen genuinely
-lists one more item, and a "discontinued" scenario's genuinely lists one
-fewer — the interruption isn't just cosmetic.
+(in `src/meds.js`), so its `due` screen genuinely lists Ramipril at the new
+5 mg and no longer lists Melatonin at all — the interruption isn't just
+cosmetic. Both changes are shown together on one `change` screen and
+acknowledged with a single DONE, since the user should never have to work
+through a change type at a time.
 
 `src/background.js` is a separate, equally pure module that narrates
 transitions into the background-log sentences (each tagged `digital` or
@@ -133,22 +138,28 @@ too, for testing without a mouse:
 ## Scenarios
 
 The background panel's scenario picker resets the whole prototype into one of
-eight demo paths:
+four demo paths — deliberately few, so each one earns its place:
 
-- **Normal morning** — press DONE through the whole routine.
-- **Deferred morning** — press LATER on the routine or on a dose, then either
-  wait for the simulated reminder or use "Skip wait." Defer twice to see the
-  softened "still waiting" prompt.
-- **"Did I take it?"** — starts already past a confirmed morning dose; press
-  `?` from the resting screen to check on it.
-- **New medication** / **Changed dosage** / **Discontinued medication** — a
-  change interruption appears before the routine; press DONE to acknowledge
-  it, then DONE again on the resulting "Routine updated" screen. The morning
-  routine that follows genuinely reflects the change.
-- **Physical prescription setup** — press DONE to simulate scanning a
-  prescription, review what was detected, then load the medication.
-- **Digital prescription setup** — the same flow without the scan step, since
-  the prescription arrives already verified.
+- **Normal morning** — the whole day. Press DONE through morning (Metformin,
+  Ramipril), afternoon (Atorvastatin), and evening (Melatonin, a clearly
+  labelled sample medication demonstrating the routine spans a full day, not
+  just a morning block). Also the best scenario to explore `LATER` (defer a
+  dose, then either wait or use "Skip wait" — defer twice to see the
+  softened "still waiting" prompt) and `?` (check "did I take it?" from any
+  resting screen).
+- **Digital prescription setup** — press DONE to receive an already-verified
+  prescription, load the medications, and ready the routine. Demonstrates
+  the pharmacist → digital transmission → device pathway.
+- **Physical prescription setup** — the parallel pathway: press DONE to scan
+  a prescription, load the medications, and ready the routine. The
+  background log explicitly notes the scanned prescription is verified
+  against the pharmacy record — the device reads it, but doesn't decide
+  anything on its own.
+- **Medication change** — a change interruption appears before the routine,
+  showing a dosage change (Ramipril 10 mg → 5 mg) and a discontinued
+  medication (Melatonin) together on one screen, acknowledged with a single
+  DONE ("I understand"). The routine that follows genuinely reflects both
+  changes — the user never calculates or reorganises anything themselves.
 
 "Restart scenario" replays the current scenario from the start.
 
