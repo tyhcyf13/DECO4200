@@ -74,7 +74,7 @@ export default function BackgroundPanel({
 
   return (
     <aside className="scaffold" aria-label="Design-concept background panel">
-      <section className="scaffold__section">
+      <section className="scaffold__section scaffold__section--full">
         <h2 className="scaffold__heading">Scenario</h2>
         <div className="scenario-picker" role="radiogroup" aria-label="Choose a scenario">
           {SCENARIO_OPTIONS.map((opt) => (
