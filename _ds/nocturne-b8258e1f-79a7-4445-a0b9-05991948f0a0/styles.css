@@ -1,0 +1,154 @@
+/*
+  Nocturne design system — LOCAL STAND-IN TOKEN SET.
+
+  This project references a Nocturne design system bound at this path, but the
+  live bundle could not be synced from claude.ai in this environment (would
+  require `/design-login` + DesignSync). These tokens are hand-authored to
+  match every constraint given for Nocturne in the product brief: dark ground,
+  Inter at weight 500 for headings, a single blurple accent used only as a
+  line/glow, 8px component radii, a dense 0.7x spacing scale, and themed
+  hover/pressed states derived from the accent ramp. Swap this file for the
+  real synced bundle when available — nothing downstream should need to change
+  beyond the custom property values themselves.
+*/
+
+:root {
+  /* ---- color: ground & surfaces ---- */
+  --color-bg: #0a0b10;
+  --color-surface: #14161d;
+  --color-surface-raised: #1b1e28;
+  --color-surface-sunken: #08090d;
+  --color-border: #262a37;
+  --color-border-strong: #363b4d;
+
+  /* ---- color: text ---- */
+  --color-text: #f2f3f7;
+  --color-text-muted: #9ba0b4;
+  --color-text-faint: #656b80;
+
+  /* ---- color: single accent ramp (blurple) ---- */
+  --color-accent: #7c8cff;
+  --color-accent-strong: #99a6ff;
+  --color-accent-dim: #4c50a3;
+  --color-accent-wash: rgba(124, 140, 255, 0.12);
+  --color-accent-wash-strong: rgba(124, 140, 255, 0.22);
+  --color-accent-glow: rgba(124, 140, 255, 0.55);
+
+  /* the only non-accent hue in the system: a quiet confirmation green, used
+     exclusively for the completion ring/tick, never as a status color elsewhere */
+  --color-confirm: #7fd9ab;
+  --color-confirm-wash: rgba(127, 217, 171, 0.14);
+  --color-confirm-glow: rgba(127, 217, 171, 0.5);
+
+  /* ---- type ---- */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-weight-body: 400;
+  --font-weight-heading: 500;
+  --font-weight-emphasis: 600;
+
+  /* ---- spacing: dense 0.7x scale (base 4/8/12/16/24/32/48/64/96) ---- */
+  --space-1: 3px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 11px;
+  --space-5: 17px;
+  --space-6: 22px;
+  --space-7: 34px;
+  --space-8: 45px;
+  --space-9: 67px;
+
+  /* ---- radii ---- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 24px;
+  --radius-round: 999px;
+
+  /* ---- shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-glow-accent: 0 0 0 1px var(--color-accent-glow), 0 0 24px var(--color-accent-glow);
+  --shadow-glow-confirm: 0 0 0 1px var(--color-confirm-glow), 0 0 24px var(--color-confirm-glow);
+
+  /* ---- motion ---- */
+  --duration-fast: 200ms;
+  --duration-base: 320ms;
+  --duration-slow: 450ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --pulse-duration: 2200ms;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ---- shared outlined button primitive: transparent fill, accent-ramp states ---- */
+.ds-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-heading);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.ds-btn:hover:not(:disabled) {
+  border-color: var(--color-accent-dim);
+  background: var(--color-accent-wash);
+}
+
+.ds-btn:active:not(:disabled) {
+  background: var(--color-accent-wash-strong);
+  transform: translateY(1px);
+}
+
+.ds-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ds-btn--accent {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.ds-btn--accent:hover:not(:disabled) {
+  background: var(--color-accent-wash);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
